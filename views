@@ -1,0 +1,75 @@
+def absentoptions(request):
+    attendance = request.GET.get('attendancecoursereport')
+    print(attendance)
+    attendance_coursereport = AttendanceCourseReport.objects.get(pk=attendance)
+    # print(attendance_coursereport)
+    if request.method == 'POST':
+        print("work")
+        form = OptionsForm(request.POST or None)
+        if form.is_valid():
+            # form.save()
+            actions = form.cleaned_data.get('actions')
+            print(actions.id)
+            text = form.cleaned_data.get('text')
+            print(text)
+            text1 = form.cleaned_data.get('text1')
+            text3 = form.cleaned_data.get('text3')
+            date = form.cleaned_data.get('date')
+            time = form.cleaned_data.get('time')
+            if actions.id == 1:
+
+                CourseAction.objects.create(
+                   attendancecoursereport=attendance_coursereport,
+                    actions = actions,
+                    text = text1,
+                )
+                messages.success(request, 'Add a note is saved successfully')
+                # return redirect('/absentoptions')
+            if actions.id == 3:
+                CourseAction.objects.create(
+                    attendancecoursereport=attendance_coursereport,
+                    actions=actions,
+                    text=text,
+                )
+                messages.success(request, 'Custom email is saved successfully')
+                # return redirect(reverse('/absentoptions'))
+            if actions.id == 4:
+                attendance_coursereport.managed = True
+                attendance_coursereport.save()
+                messages.success(request, 'The student will be managed')
+
+            if actions.id == 6:
+                attendance_coursereport.managed = False
+                attendance_coursereport.save()
+                messages.success(request, 'The student will be unmanaged')
+
+            if actions.id == 5:
+                CourseAction.objects.create(
+                    attendancecoursereport=attendance_coursereport,
+                    actions=actions,
+                    text=text3,
+                    meeting_date=date,meeting_time=time
+                )
+                messages.success(request, 'Arrange a metting is saved successfully')
+
+            objectives =  CourseAction.objects.filter(attendancecoursereport_id = attendance).order_by('datetime')[::-1]
+
+            # for objectives in objective:
+            #     CourseAction.objects.filter(text=text,actions_id=actions.id).order_by('datetime')
+
+
+        else:
+            data = form.cleaned_data
+            date = data.get("date")
+            time = data.get("time")
+            text = data.get("text")
+            args = {'form': form, 'meeting_date': date,'meeting_time':time, 'text': text}
+            return render(request, 'epitaadmin/options.html', args)
+
+
+    else:
+        attendance = request.GET.get('attendancecoursereport')
+        attendance_coursereport = AttendanceCourseReport.objects.get(pk=attendance)
+        # action = Actions.objects.all()
+        form = OptionsForm()
+    return render(request, 'epitaadmin/options.html', {'form': form, 'attedancecoursereport': attendance_coursereport,'objectives':objectives})
